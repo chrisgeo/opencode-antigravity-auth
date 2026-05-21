@@ -56,8 +56,28 @@ export const OPENCODE_MODEL_DEFINITIONS: OpencodeModelDefinitions = {
       high: { thinkingLevel: "high" },
     },
   },
+  "antigravity-gemini-3.5-pro": {
+    name: "Gemini 3.5 Pro (Antigravity)",
+    limit: { context: 1048576, output: 65535 },
+    modalities: DEFAULT_MODALITIES,
+    variants: {
+      low: { thinkingLevel: "low" },
+      high: { thinkingLevel: "high" },
+    },
+  },
   "antigravity-gemini-3-flash": {
     name: "Gemini 3 Flash (Antigravity)",
+    limit: { context: 1048576, output: 65536 },
+    modalities: DEFAULT_MODALITIES,
+    variants: {
+      minimal: { thinkingLevel: "minimal" },
+      low: { thinkingLevel: "low" },
+      medium: { thinkingLevel: "medium" },
+      high: { thinkingLevel: "high" },
+    },
+  },
+  "antigravity-gemini-3.5-flash": {
+    name: "Gemini 3.5 Flash (Antigravity)",
     limit: { context: 1048576, output: 65536 },
     modalities: DEFAULT_MODALITIES,
     variants: {
@@ -96,6 +116,11 @@ export const OPENCODE_MODEL_DEFINITIONS: OpencodeModelDefinitions = {
     limit: { context: 1048576, output: 65536 },
     modalities: DEFAULT_MODALITIES,
   },
+  "gemini-3.5-flash-preview": {
+    name: "Gemini 3.5 Flash Preview (Gemini CLI)",
+    limit: { context: 1048576, output: 65536 },
+    modalities: DEFAULT_MODALITIES,
+  },
   "gemini-3-pro-preview": {
     name: "Gemini 3 Pro Preview (Gemini CLI)",
     limit: { context: 1048576, output: 65535 },
@@ -108,6 +133,11 @@ export const OPENCODE_MODEL_DEFINITIONS: OpencodeModelDefinitions = {
   },
   "gemini-3.1-pro-preview-customtools": {
     name: "Gemini 3.1 Pro Preview Custom Tools (Gemini CLI)",
+    limit: { context: 1048576, output: 65535 },
+    modalities: DEFAULT_MODALITIES,
+  },
+  "gemini-3.5-pro-preview": {
+    name: "Gemini 3.5 Pro Preview (Gemini CLI)",
     limit: { context: 1048576, output: 65535 },
     modalities: DEFAULT_MODALITIES,
   },

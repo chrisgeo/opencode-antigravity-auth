@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- **Gemini 3.5 models** - Added `gemini-3.5-pro` and `gemini-3.5-flash` across both quota pools: Antigravity (`antigravity-gemini-3.5-pro`, `antigravity-gemini-3.5-flash`) and Gemini CLI (`gemini-3.5-pro-preview`, `gemini-3.5-flash-preview`). Pro exposes `low`/`high` thinking levels; Flash exposes `minimal`/`low`/`medium`/`high`. Routing, thinking-level handling, and cross-pool quota fallback are handled by the existing version-agnostic resolver (rollout-dependent).
+
 ## [1.6.0] - 2026-02-20
 
 ### Fixed
