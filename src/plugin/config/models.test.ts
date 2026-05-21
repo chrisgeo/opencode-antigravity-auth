@@ -19,6 +19,7 @@ describe("OPENCODE_MODEL_DEFINITIONS", () => {
       "antigravity-claude-sonnet-4-6",
       "antigravity-gemini-3-flash",
       "antigravity-gemini-3-pro",
+      "antigravity-gemini-3.1-flash",
       "antigravity-gemini-3.1-pro",
       "antigravity-gemini-3.5-flash",
       "antigravity-gemini-3.5-pro",
@@ -26,10 +27,11 @@ describe("OPENCODE_MODEL_DEFINITIONS", () => {
       "gemini-2.5-pro",
       "gemini-3-flash-preview",
       "gemini-3-pro-preview",
-      "gemini-3.1-pro-preview",
+      "gemini-3.1-flash",
+      "gemini-3.1-pro",
       "gemini-3.1-pro-preview-customtools",
-      "gemini-3.5-flash-preview",
-      "gemini-3.5-pro-preview",
+      "gemini-3.5-flash",
+      "gemini-3.5-pro",
     ]);
   });
 
@@ -45,6 +47,13 @@ describe("OPENCODE_MODEL_DEFINITIONS", () => {
     });
 
     expect(getModel("antigravity-gemini-3-flash").variants).toEqual({
+      minimal: { thinkingLevel: "minimal" },
+      low: { thinkingLevel: "low" },
+      medium: { thinkingLevel: "medium" },
+      high: { thinkingLevel: "high" },
+    });
+
+    expect(getModel("antigravity-gemini-3.1-flash").variants).toEqual({
       minimal: { thinkingLevel: "minimal" },
       low: { thinkingLevel: "low" },
       medium: { thinkingLevel: "medium" },
