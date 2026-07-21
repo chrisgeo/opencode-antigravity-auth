@@ -92,22 +92,19 @@ describe("resolveModelWithTier", () => {
 
     it("translates Antigravity-only ids to the public Gemini API equivalent", () => {
       const result = resolveModelForHeaderStyle(
-        "antigravity-gemini-3-pro-high",
+        "antigravity-gemini-3.1-pro-high",
         "agy-sdk",
       );
 
-      expect(result.actualModel).toBe("gemini-3-pro-preview");
+      expect(result.actualModel).toBe("gemini-3.1-pro-preview");
       expect(result.thinkingLevel).toBe("high");
       expect(result.quotaPreference).toBe("agy-sdk");
     });
 
     it("translates each known Antigravity-only Gemini id to its public-API equivalent", () => {
       const cases: Array<[string, string]> = [
-        ["antigravity-gemini-3-pro", "gemini-3-pro-preview"],
-        ["antigravity-gemini-3-flash-medium", "gemini-3-flash-preview"],
         ["antigravity-gemini-3.1-pro-low", "gemini-3.1-pro-preview"],
-        ["antigravity-gemini-3.1-flash", "gemini-3.1-flash-lite"],
-        ["gemini-3-pro", "gemini-3-pro-preview"],
+        ["antigravity-gemini-3.1-pro", "gemini-3.1-pro-preview"],
         ["gemini-3.1-pro", "gemini-3.1-pro-preview"],
       ];
       for (const [input, expected] of cases) {

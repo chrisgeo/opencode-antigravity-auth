@@ -50,7 +50,6 @@ export type { ClaudeTransformOptions, ClaudeTransformResult } from "./claude";
 export {
   isGeminiModel,
   isGemini3Model,
-  isGemini25Model,
   isImageGenerationModel,
   buildGemini3ThinkingConfig,
   buildGemini25ThinkingConfig,

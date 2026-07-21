@@ -104,7 +104,7 @@ describe("api-key agy sdk support", () => {
 
   it("prepares public Gemini API requests with API key headers and no URL secret", async () => {
     const prepared = await prepareAgySdkGeminiRequest(
-      "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3-pro-high:streamGenerateContent?alt=sse&key=old-url-key",
+      "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.1-pro-high:streamGenerateContent?alt=sse&key=old-url-key",
       {
         method: "POST",
         headers: {
@@ -128,7 +128,7 @@ describe("api-key agy sdk support", () => {
     );
 
     expect(String(prepared.request)).toBe(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:streamGenerateContent?alt=sse",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:streamGenerateContent?alt=sse",
     );
     const headers = new Headers(prepared.init.headers);
     expect(headers.get("Authorization")).toBeNull();
@@ -221,7 +221,7 @@ describe("api-key agy sdk support", () => {
 
   it("keeps Gemini 3 tier suffix as thinking level while stripping it from the public API model", async () => {
     const prepared = await prepareAgySdkGeminiRequest(
-      "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3-pro-high:generateContent",
+      "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.1-pro-high:generateContent",
       {
         method: "POST",
         body: JSON.stringify({ contents: [] }),
@@ -230,7 +230,7 @@ describe("api-key agy sdk support", () => {
     );
 
     expect(String(prepared.request)).toBe(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent",
     );
     expect(await readPreparedBody(prepared.init.body)).toEqual({
       contents: [],
@@ -435,11 +435,8 @@ describe("api-key agy sdk support", () => {
 });
 
 describe("isLikelyAntigravityOnlyModel", () => {
-  it("flags bare gemini-3 pro/flash ids as Antigravity-only", () => {
-    expect(isLikelyAntigravityOnlyModel("gemini-3-pro")).toBe(true);
+  it("flags bare gemini-3.1-pro as Antigravity-only", () => {
     expect(isLikelyAntigravityOnlyModel("gemini-3.1-pro")).toBe(true);
-    expect(isLikelyAntigravityOnlyModel("gemini-3-flash")).toBe(true);
-    expect(isLikelyAntigravityOnlyModel("gemini-3.1-flash")).toBe(true);
   });
 
   it("flags antigravity- and claude- prefixed ids as Antigravity-only", () => {

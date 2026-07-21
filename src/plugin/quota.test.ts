@@ -96,6 +96,48 @@ describe("Antigravity quota aggregation", () => {
     expect(summary.groups["gemini-flash"]?.resetTime).toBe("2026-05-26T18:00:00Z");
   });
 
+  it("marks the group as reported when the representative model has a real fraction", () => {
+    const summary = __testExports.aggregateQuota({
+      "gemini-3.1-pro-low": {
+        quotaInfo: { remainingFraction: 0.53, resetTime: "2026-05-28T18:00:00Z" },
+      },
+    });
+
+    expect(summary.groups["gemini-pro"]?.remainingFraction).toBe(0.53);
+    expect(summary.groups["gemini-pro"]?.remainingFractionReported).toBe(true);
+  });
+
+  it("marks the group as NOT reported when the backend omits remainingFraction", () => {
+    // Antigravity often returns only a resetTime for Gemini buckets. We keep the
+    // numeric remainingFraction at 0 (so soft-quota fallback is unchanged) but flag
+    // it as unreported so the UI can render "n/a" instead of a misleading 0%.
+    const summary = __testExports.aggregateQuota({
+      "gemini-3.1-flash-lite": {
+        quotaInfo: { resetTime: "2026-05-28T18:00:00Z" },
+      },
+      "gemini-3.5-flash-low": {
+        quotaInfo: { resetTime: "2026-05-28T18:00:00Z" },
+      },
+    });
+
+    expect(summary.groups["gemini-flash"]?.remainingFraction).toBe(0);
+    expect(summary.groups["gemini-flash"]?.remainingFractionReported).toBe(false);
+  });
+
+  it("reports the group when any model in it has a real fraction (it wins representation)", () => {
+    const summary = __testExports.aggregateQuota({
+      "gemini-3.1-flash-lite": {
+        quotaInfo: { resetTime: "2026-05-28T18:00:00Z" },
+      },
+      "gemini-3.5-flash-low": {
+        quotaInfo: { remainingFraction: 0.38, resetTime: "2026-05-28T18:00:00Z" },
+      },
+    });
+
+    expect(summary.groups["gemini-flash"]?.remainingFraction).toBe(0.38);
+    expect(summary.groups["gemini-flash"]?.remainingFractionReported).toBe(true);
+  });
+
   it("ignores unparseable reset times", () => {
     const summary = __testExports.aggregateQuota({
       "gemini-3-flash-agent": {

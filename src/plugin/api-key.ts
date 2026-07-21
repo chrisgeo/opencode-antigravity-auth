@@ -269,10 +269,7 @@ export function extractRequestedGeminiModel(urlString: string): string | undefin
  * Source: GET https://generativelanguage.googleapis.com/v1beta/models (May 2026).
  */
 const PUBLIC_GEMINI_API_MODEL_SUGGESTIONS = [
-  "gemini-2.5-pro",
-  "gemini-2.5-flash",
   "gemini-3.1-pro-preview",
-  "gemini-3.1-flash-lite",
   "gemini-3.5-flash",
 ] as const;
 
@@ -286,10 +283,7 @@ const PUBLIC_GEMINI_API_MODEL_SUGGESTIONS = [
  * than pattern-based to avoid false positives.
  */
 const ANTIGRAVITY_ONLY_BARE_GEMINI_IDS: ReadonlySet<string> = new Set([
-  "gemini-3-pro",
-  "gemini-3-flash",
   "gemini-3.1-pro",
-  "gemini-3.1-flash",
 ]);
 
 /**

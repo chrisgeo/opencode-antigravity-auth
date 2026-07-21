@@ -103,10 +103,10 @@ describe("createAntigravityPlugin provider models", () => {
         input: { text: true, image: true, pdf: true },
         output: { text: true },
       });
-      expect(models?.["antigravity-gemini-3-pro"]).toMatchObject({
-        id: "antigravity-gemini-3-pro",
+      expect(models?.["antigravity-gemini-3.1-pro"]).toMatchObject({
+        id: "antigravity-gemini-3.1-pro",
         providerID: "google",
-        api: { id: "antigravity-gemini-3-pro" },
+        api: { id: "antigravity-gemini-3.1-pro" },
       });
     } finally {
       vi.unstubAllGlobals();

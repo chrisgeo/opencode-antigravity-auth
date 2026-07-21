@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   isGeminiModel,
   isGemini3Model,
-  isGemini25Model,
   isImageGenerationModel,
   buildGemini3ThinkingConfig,
   buildGemini25ThinkingConfig,
@@ -96,40 +95,6 @@ describe("transform/gemini", () => {
 
     it("returns false for empty string", () => {
       expect(isGemini3Model("")).toBe(false);
-    });
-  });
-
-  describe("isGemini25Model", () => {
-    it("returns true for gemini-2.5-pro", () => {
-      expect(isGemini25Model("gemini-2.5-pro")).toBe(true);
-    });
-
-    it("returns true for gemini-2.5-flash", () => {
-      expect(isGemini25Model("gemini-2.5-flash")).toBe(true);
-    });
-
-    it("returns true for gemini-2.5-pro-preview", () => {
-      expect(isGemini25Model("gemini-2.5-pro-preview")).toBe(true);
-    });
-
-    it("returns true for uppercase GEMINI-2.5-PRO", () => {
-      expect(isGemini25Model("GEMINI-2.5-PRO")).toBe(true);
-    });
-
-    it("returns false for gemini-3-pro", () => {
-      expect(isGemini25Model("gemini-3-pro")).toBe(false);
-    });
-
-    it("returns false for gemini-2.0-flash", () => {
-      expect(isGemini25Model("gemini-2.0-flash")).toBe(false);
-    });
-
-    it("returns false for gemini-pro", () => {
-      expect(isGemini25Model("gemini-pro")).toBe(false);
-    });
-
-    it("returns false for empty string", () => {
-      expect(isGemini25Model("")).toBe(false);
     });
   });
 

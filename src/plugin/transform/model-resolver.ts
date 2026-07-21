@@ -17,8 +17,6 @@ export interface ModelResolverOptions {
  */
 export const THINKING_TIER_BUDGETS = {
   claude: { low: 8192, medium: 16384, high: 32768 },
-  "gemini-2.5-pro": { low: 8192, medium: 16384, high: 32768 },
-  "gemini-2.5-flash": { low: 6144, medium: 12288, high: 24576 },
   default: { low: 4096, medium: 8192, high: 16384 },
 } as const;
 
@@ -47,13 +45,8 @@ export const MODEL_ALIASES: Record<string, string> = {
 
   // Gemini 3 variants - for Gemini CLI only (tier stripped, thinkingLevel used)
   // For Antigravity, these are bypassed and full model name is kept
-  "gemini-3-pro-low": "gemini-3-pro",
-  "gemini-3-pro-high": "gemini-3-pro",
   "gemini-3.1-pro-low": "gemini-3.1-pro",
   "gemini-3.1-pro-high": "gemini-3.1-pro",
-  "gemini-3-flash-low": "gemini-3-flash",
-  "gemini-3-flash-medium": "gemini-3-flash",
-  "gemini-3-flash-high": "gemini-3-flash",
 
   // Claude proxy names (gemini- prefix for compatibility)
   "gemini-claude-opus-4-6-thinking-low": "claude-opus-4-6-thinking",
@@ -101,7 +94,6 @@ function supportsThinkingTiers(model: string): boolean {
   const lower = model.toLowerCase();
   return (
     lower.includes("gemini-3") ||
-    lower.includes("gemini-2.5") ||
     (lower.includes("claude") && lower.includes("thinking"))
   );
 }
@@ -126,12 +118,6 @@ function getBudgetFamily(model: string): keyof typeof THINKING_TIER_BUDGETS {
   if (model.includes("claude")) {
     return "claude";
   }
-  if (model.includes("gemini-2.5-pro")) {
-    return "gemini-2.5-pro";
-  }
-  if (model.includes("gemini-2.5-flash")) {
-    return "gemini-2.5-flash";
-  }
   return "default";
 }
 
@@ -142,8 +128,7 @@ function isThinkingCapableModel(model: string): boolean {
   const lower = model.toLowerCase();
   return (
     lower.includes("thinking") ||
-    lower.includes("gemini-3") ||
-    lower.includes("gemini-2.5")
+    lower.includes("gemini-3")
   );
 }
 
@@ -387,10 +372,7 @@ function budgetToGemini3Level(budget: number): "low" | "medium" | "high" {
  */
 const ANTIGRAVITY_TO_PUBLIC_API_MODEL_MAP: ReadonlyMap<string, string> =
   new Map([
-    ["gemini-3-pro", "gemini-3-pro-preview"],
-    ["gemini-3-flash", "gemini-3-flash-preview"],
     ["gemini-3.1-pro", "gemini-3.1-pro-preview"],
-    ["gemini-3.1-flash", "gemini-3.1-flash-lite"],
   ]);
 
 export function mapAntigravityModelToPublicApi(

@@ -19,6 +19,14 @@ export interface QuotaGroupSummary {
   remainingFraction?: number;
   resetTime?: string;
   modelCount: number;
+  /**
+   * Whether the representative model actually reported a numeric
+   * remainingFraction. Antigravity frequently returns only a resetTime for
+   * Gemini buckets; in that case remainingFraction is normalized to 0 (so the
+   * soft-quota fallback keeps treating it conservatively) but this flag is
+   * false, letting the UI render "n/a" instead of a misleading 0%.
+   */
+  remainingFractionReported?: boolean;
 }
 
 export interface QuotaSummary {
@@ -133,6 +141,12 @@ function aggregateQuota(models?: Record<string, FetchAvailableModelEntry>): Quot
       continue;
     }
     const quotaInfo = entry.quotaInfo;
+    // Did the backend actually send a usable numeric fraction? Antigravity often
+    // returns only a resetTime for Gemini buckets — that must not be shown as 0%.
+    const fractionReported =
+      quotaInfo != null &&
+      typeof quotaInfo.remainingFraction === "number" &&
+      Number.isFinite(quotaInfo.remainingFraction);
     const remainingFraction = quotaInfo
       ? normalizeRemainingFraction(quotaInfo.remainingFraction)
       : undefined;
@@ -148,16 +162,19 @@ function aggregateQuota(models?: Record<string, FetchAvailableModelEntry>): Quot
     const existing = groups[group];
     const nextCount = (existing?.modelCount ?? 0) + 1;
 
-    // Keep remainingFraction and resetTime coupled to the SAME model. The
-    // representative model for a group is the one with the highest remaining
-    // fraction; when a model wins that comparison we take its resetTime too.
+    // Keep remainingFraction, resetTime, and the reported flag coupled to the
+    // SAME model. The representative model for a group is the one with the
+    // highest remaining fraction; when a model wins that comparison we take its
+    // resetTime and reported flag too.
     let nextRemaining = existing?.remainingFraction;
     let nextResetTime = existing?.resetTime;
+    let nextReported = existing?.remainingFractionReported ?? false;
 
     if (existing === undefined) {
       // First model in the group establishes the baseline coupled pair.
       nextRemaining = remainingFraction;
       nextResetTime = validResetTime;
+      nextReported = fractionReported;
     } else if (
       remainingFraction !== undefined &&
       (existing.remainingFraction === undefined || remainingFraction > existing.remainingFraction)
@@ -165,6 +182,7 @@ function aggregateQuota(models?: Record<string, FetchAvailableModelEntry>): Quot
       // This model has strictly more remaining quota — it becomes representative.
       nextRemaining = remainingFraction;
       nextResetTime = validResetTime;
+      nextReported = fractionReported;
     } else if (
       remainingFraction !== undefined &&
       existing.remainingFraction !== undefined &&
@@ -187,6 +205,7 @@ function aggregateQuota(models?: Record<string, FetchAvailableModelEntry>): Quot
       remainingFraction: nextRemaining,
       resetTime: nextResetTime,
       modelCount: nextCount,
+      remainingFractionReported: nextReported,
     };
   }
 
@@ -284,11 +303,11 @@ function aggregateGeminiCliQuota(response: RetrieveUserQuotaResponse): GeminiCli
     }
     
     // Filter out models we don't care about for Gemini CLI quotas
-    // Only show gemini-3-* and gemini-2.5-pro models (the premium ones)
+    // Only show the kept premium models (Gemini 3.5 Flash, Gemini 3.1 Pro)
     const modelId = bucket.modelId;
-    const isRelevantModel = 
-      modelId.startsWith("gemini-3-") || 
-      modelId === "gemini-2.5-pro";
+    const isRelevantModel =
+      modelId.startsWith("gemini-3.5") ||
+      modelId.startsWith("gemini-3.1-pro");
     
     if (!isRelevantModel) {
       continue;

@@ -290,6 +290,31 @@ function costForProviderModel(model: ProviderModel, existing: ProviderModel | un
   };
 }
 
+/**
+ * User-facing Gemini model families intentionally removed from this plugin
+ * (Gemini 2.5 Pro/Flash, Gemini 3 Pro, Gemini 3 Flash, Gemini 3.1 Flash
+ * Lite/Image). Filtered out of BOTH the static definitions and anything
+ * surfaced by live model discovery, so they never reappear regardless of
+ * source. Kept models that share a prefix (gemini-3.5-flash, gemini-3.1-pro)
+ * are preserved because the checks match the removed families exactly:
+ * "gemini-3.5-flash" does not start with "gemini-3-flash", and "gemini-3.1-pro"
+ * does not start with "gemini-3-pro". The internal backend id
+ * "gemini-3-flash-agent" (used by gemini-3.5-flash high tier) is never passed
+ * through this hook, so it is unaffected.
+ */
+function isRemovedModelId(modelId: string): boolean {
+  const id = modelId
+    .toLowerCase()
+    .replace(/^antigravity-/, "")
+    .replace(/-(minimal|low|medium|high)$/, "");
+  return (
+    id.startsWith("gemini-2.5") ||
+    id.startsWith("gemini-3-pro") ||
+    id.startsWith("gemini-3-flash") ||
+    id.startsWith("gemini-3.1-flash")
+  );
+}
+
 function normalizeProviderHookModels(
   providerId: string,
   provider: Provider,
@@ -301,6 +326,7 @@ function normalizeProviderHookModels(
   const providerNpm = typeof provider.npm === "string" ? provider.npm : "@ai-sdk/google";
 
   for (const [id, model] of Object.entries(definitions)) {
+    if (isRemovedModelId(id)) continue;
     const existing = existingModels[id];
     if (hasProviderModelRuntimeShape(model)) {
       normalized[id] = model;
@@ -756,9 +782,9 @@ async function verifyAccountAccess(
 
   const requestBody = {
     project: projectId,
-    model: "gemini-3-flash",
+    model: "gemini-3.5-flash-low",
     request: {
-      model: "gemini-3-flash",
+      model: "gemini-3.5-flash-low",
       contents: [{ role: "user", parts: [{ text: "ping" }] }],
       generationConfig: { maxOutputTokens: 1, temperature: 0 },
     },
@@ -3423,7 +3449,7 @@ export const createAntigravityPlugin = (providerId: string) => async (
 
                     // Helper to create colored progress bar
                     const createProgressBar = (remaining?: number, width: number = 20): string => {
-                      if (typeof remaining !== 'number') return '░'.repeat(width) + ' ???';
+                      if (typeof remaining !== 'number') return '░'.repeat(width) + ' n/a';
                       const filled = Math.round(remaining * width);
                       const empty = width - filled;
                       const color = getColor(remaining);
@@ -3477,16 +3503,26 @@ export const createAntigravityPlugin = (providerId: string) => async (
                       console.log(`     └─ ${errorMsg}`);
                     } else {
                       const groups = res.quota!.groups;
+                      // Antigravity meters Gemini quota per family (one shared Pro
+                      // bucket, one shared Flash bucket) — not per model version —
+                      // so we label by family rather than naming an arbitrary
+                      // variant the API happens to return first.
                       const groupEntries = [
                         { name: "Claude", data: groups.claude },
-                        { name: "Gemini 3 Pro", data: groups["gemini-pro"] },
-                        { name: "Gemini 3 Flash", data: groups["gemini-flash"] },
+                        { name: "Gemini Pro", data: groups["gemini-pro"] },
+                        { name: "Gemini Flash", data: groups["gemini-flash"] },
                       ].filter(g => g.data);
-                      
+
                       groupEntries.forEach((g, idx) => {
                         const isLast = idx === groupEntries.length - 1;
                         const connector = isLast ? "└─" : "├─";
-                        const bar = createProgressBar(g.data!.remainingFraction);
+                        // When the backend reported no numeric fraction, pass
+                        // undefined so the bar renders "n/a" instead of a
+                        // misleading 0%.
+                        const fraction = g.data!.remainingFractionReported
+                          ? g.data!.remainingFraction
+                          : undefined;
+                        const bar = createProgressBar(fraction);
                         const reset = formatReset(g.data!.resetTime);
                         const modelName = g.name.padEnd(29);
                         console.log(`     ${connector} ${modelName} ${bar}${reset}`);

@@ -248,13 +248,6 @@ export function isGemini3Model(model: string): boolean {
 }
 
 /**
- * Check if a model is Gemini 2.5 (uses numeric thinkingBudget).
- */
-export function isGemini25Model(model: string): boolean {
-  return model.toLowerCase().includes("gemini-2.5");
-}
-
-/**
  * Check if a model is an image generation model.
  * Image models don't support thinking and require imageConfig.
  */
