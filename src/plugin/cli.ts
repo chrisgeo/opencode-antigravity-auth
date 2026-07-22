@@ -10,6 +10,9 @@ import {
 import { updateOpencodeConfig } from "./config/updater";
 
 export async function promptProjectId(): Promise<string> {
+  if (!input.isTTY) {
+    return "";
+  }
   const rl = createInterface({ input, output });
   try {
     const answer = await rl.question("Project ID (leave blank to use your default project): ");
@@ -36,6 +39,9 @@ export async function pressEnterToContinue(
 }
 
 export async function promptAddAnotherAccount(currentCount: number): Promise<boolean> {
+  if (!input.isTTY) {
+    return false;
+  }
   const rl = createInterface({ input, output });
   try {
     const answer = await rl.question(`Add another account? (${currentCount} added) (y/n): `);
@@ -69,6 +75,9 @@ export interface LoginMenuResult {
 }
 
 async function promptLoginModeFallback(existingAccounts: ExistingAccountInfo[]): Promise<LoginMenuResult> {
+  if (!input.isTTY) {
+    return { mode: "add" };
+  }
   const rl = createInterface({ input, output });
   try {
     console.log(`\n${existingAccounts.length} account(s) saved:`);

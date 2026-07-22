@@ -34,7 +34,7 @@
         "LICENSE"
     ],
     "scripts": {
-        "build": "tsc -p tsconfig.build.json",
+        "build": "esbuild index.ts --bundle --format=esm --platform=node --outfile=dist/index.js --external:node: --external:proper-lockfile --external:xdg-basedir --external:zod --external:@openauthjs/openauth --sourcemap",
         "build:schema": "npx tsx script/build-schema.ts",
         "typecheck": "tsc --noEmit",
         "test": "vitest run",
@@ -53,6 +53,7 @@
         "@types/proper-lockfile": "^4.1.4",
         "@vitest/coverage-v8": "^3.2.7",
         "@vitest/ui": "^3.2.7",
+        "esbuild": "^0.28.1",
         "typescript": "^5.9.3",
         "vitest": "^3.2.7",
         "zod-to-json-schema": "^3.25.2"
@@ -63,5 +64,9 @@
         "proper-lockfile": "^4.1.2",
         "xdg-basedir": "^5.1.0",
         "zod": "^4.4.3"
+    },
+    "allowScripts": {
+        "esbuild@0.28.1": true,
+        "esbuild@0.25.12": true
     }
 }

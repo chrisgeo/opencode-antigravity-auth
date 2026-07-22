@@ -12,3 +12,6 @@ export type {
   AntigravityAuthorization,
   AntigravityTokenExchangeResult,
 } from "./src/antigravity/oauth";
+
+import { AntigravityCLIOAuthPlugin } from "./src/plugin";
+export default AntigravityCLIOAuthPlugin;

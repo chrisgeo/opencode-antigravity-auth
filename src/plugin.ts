@@ -817,6 +817,9 @@ async function verifyAccountAccess(
 async function promptAccountIndexForVerification(
   accounts: Array<{ email?: string; index: number }>,
 ): Promise<number | undefined> {
+  if (!process.stdin.isTTY) {
+    return accounts[0]?.index;
+  }
   const { createInterface } = await import("node:readline/promises");
   const { stdin, stdout } = await import("node:process");
   const rl = createInterface({ input: stdin, output: stdout });
@@ -935,6 +938,9 @@ function clearStoredAccountVerificationRequired(
 }
 
 async function promptOAuthCallbackValue(message: string): Promise<string> {
+  if (!process.stdin.isTTY) {
+    throw new Error("Interactive prompt not available in this environment. Please ensure the OAuth callback opens in the browser automatically.");
+  }
   const { createInterface } = await import("node:readline/promises");
   const { stdin, stdout } = await import("node:process");
   const rl = createInterface({ input: stdin, output: stdout });
