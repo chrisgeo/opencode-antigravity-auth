@@ -2460,10 +2460,14 @@ export const createAntigravityPlugin = (providerId: string) => async (
                     // state IS api-key — wiping it would corrupt that.
                     if (initialAuthWasOAuth) {
                       try {
-                        await client.auth.set({
-                          path: { id: providerId },
-                          body: { type: "oauth", refresh: "", access: "", expires: 0 },
-                        });
+                        if (client.auth.revoke) {
+                          await client.auth.revoke(account.parts.refreshToken);
+                        } else {
+                          await client.auth.set({
+                            path: { id: providerId },
+                            body: { type: "oauth", refresh: "", access: "", expires: 0 },
+                          });
+                        }
                       } catch (storeError) {
                         log.error("Failed to clear stored Antigravity OAuth credentials", { error: String(storeError) });
                       }

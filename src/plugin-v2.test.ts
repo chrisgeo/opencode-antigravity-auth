@@ -517,6 +517,58 @@ describe("AntigravityV2Plugin", () => {
     expect(legacy.auth.loader).toHaveBeenCalledTimes(2)
   })
 
+  it("accepts a replacement token on a revoked V2 connection without reusing the revoked token", async () => {
+    const loader: LegacyLoader = { apiKey: "", fetch: vi.fn(async () => googleResponse()) }
+    const receivedAuth: unknown[] = []
+    const legacy = buildLegacy({
+      loader,
+      loaderForAuth: async (getAuth) => {
+        receivedAuth.push(await getAuth())
+        return loader
+      },
+      authorization: { method: "auto", callback: async (): Promise<OAuthResult> => ({ type: "success", refresh: "r", access: "a", expires: 1 }) },
+    })
+    let revoke: ((refreshToken: string) => Promise<void>) | undefined
+    core.create.mockReturnValue(async (input: {
+      client: { auth: { revoke: (refreshToken: string) => Promise<void> } }
+    }) => {
+      revoke = input.client.auth.revoke
+      return legacy
+    })
+    core.loadConfig.mockReturnValue({ session_recovery: false })
+    let credential = { type: "oauth" as const, refresh: "revoked", access: "old", expires: 1 }
+    const { context, hooks } = createContext({ credential, events: (async function* () {})() })
+    context.integration.connection.resolve = async () => credential
+    context.integration.connection.status = vi.fn(async () => undefined)
+    const cleanup = await setup(context)
+    if (!hooks.aisdk || !revoke) throw new Error("V2 auth hooks were not registered")
+    const event: AISDKEvent = { options: {} }
+    await hooks.aisdk(event)
+    if (!isGoogleDriverFactory(event.sdk)) throw new Error("AISDK SDK factory was not installed")
+    const model = event.sdk("gemini-3-pro-preview")
+
+    await revoke("revoked")
+    await model.doGenerate(generateOptions("high"))
+    expect(receivedAuth.at(-1)).toEqual({ type: "none" })
+    expect(context.integration.connection.status).toHaveBeenCalledWith(expect.objectContaining({
+      status: expect.objectContaining({ status: "needs_auth" }),
+    }))
+
+    credential = { ...credential, access: "refreshed-access" }
+    await model.doGenerate(generateOptions("high"))
+    expect(receivedAuth).toHaveLength(2)
+
+    credential = { ...credential, refresh: "replacement-token" }
+    await model.doGenerate(generateOptions("high"))
+    expect(receivedAuth).toHaveLength(3)
+    expect(receivedAuth.at(-1)).toEqual(credential)
+    await revoke("revoked")
+    await model.doGenerate(generateOptions("high"))
+    expect(receivedAuth).toHaveLength(3)
+    expect(context.integration.connection.status).toHaveBeenCalledTimes(1)
+    await cleanup()
+  })
+
   it("routes a cached SDK through OAuth after it was initialized before any connection existed", async () => {
     const oauthLoader: LegacyLoader = {
       apiKey: "",

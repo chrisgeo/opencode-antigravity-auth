@@ -1,9 +1,9 @@
 allowBuilds:
   esbuild: false
 minimumReleaseAgeExclude:
-  - '@opencode/ai@2.0.22'
-  - '@opencode/client@2.0.22'
-  - '@opencode/plugin@2.0.22'
-  - '@opencode/protocol@2.0.22'
-  - '@opencode/schema@2.0.22'
-  - '@opencode/util@2.0.22'
+  - '@opencode/ai@2.0.27'
+  - '@opencode/client@2.0.27'
+  - '@opencode/plugin@2.0.27'
+  - '@opencode/protocol@2.0.27'
+  - '@opencode/schema@2.0.27'
+  - '@opencode/util@2.0.27'

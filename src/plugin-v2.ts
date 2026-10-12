@@ -7,6 +7,7 @@ import { createGoogleGenerativeAI } from "./google-provider.ts"
 import { ANTIGRAVITY_PROVIDER_ID } from "./constants.ts"
 import { createAntigravityPlugin } from "./plugin.ts"
 import { loadConfig } from "./plugin/config/index.ts"
+import { parseRefreshParts } from "./plugin/auth.ts"
 import { createLogger } from "./plugin/logger.ts"
 import { writeConsoleLog } from "./plugin/logging-utils.ts"
 import type { OpencodeModelDefinition } from "./plugin/config/models.ts"
@@ -71,15 +72,20 @@ export const AntigravityV2Plugin = Plugin.define({
   async setup(ctx) {
     const controller = new AbortController()
     const config = loadConfig(ctx.location.directory)
-    let invalidConnection: string | undefined
+    let invalidConnection: { key: string | undefined; refresh: string } | undefined
     const connectionKey = (connection: Awaited<ReturnType<typeof ctx.integration.connection.active>>) =>
       connection?.type === "credential" ? connection.id : connection?.type === "env" ? connection.name : undefined
 
     const getAuth = async (): Promise<AuthDetails> => {
       const connection = await ctx.integration.connection.active(PROVIDER_ID)
-      if (!connection || connectionKey(connection) === invalidConnection) return { type: "none" }
+      if (!connection) return { type: "none" }
       const credential = await ctx.integration.connection.resolve(connection)
-      if (credential?.type === "oauth") return credential
+      if (credential?.type === "oauth") {
+        if (connectionKey(connection) === invalidConnection?.key && credential.refresh === invalidConnection?.refresh) {
+          return { type: "none" }
+        }
+        return credential
+      }
       if (credential?.type === "key") return { type: "api", key: credential.key }
       return { type: "none" }
     }
@@ -93,11 +99,14 @@ export const AntigravityV2Plugin = Plugin.define({
       tui: { showToast: async ({ body }: { body: { title?: string; message: string } }) => {
         writeConsoleLog("info", body.title ? `${body.title}: ${body.message}` : body.message)
       } },
-      auth: { set: async ({ body }: { body: { refresh?: string } }) => {
-        if (body.refresh) return
+      auth: { revoke: async (refreshToken: string) => {
         const connection = await ctx.integration.connection.active(PROVIDER_ID)
         if (!connection) return
-        invalidConnection = connectionKey(connection)
+        const credential = await ctx.integration.connection.resolve(connection)
+        if (credential?.type !== "oauth" || parseRefreshParts(credential.refresh).refreshToken !== refreshToken) return
+        // Quarantine the revoked token, not its reusable connection ID. A host
+        // credential update can replace the token without creating a new ID.
+        invalidConnection = { key: connectionKey(connection), refresh: credential.refresh }
         await ctx.integration.connection.status({
           integrationID: PROVIDER_ID,
           connection,

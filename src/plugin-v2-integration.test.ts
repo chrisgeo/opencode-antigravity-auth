@@ -96,6 +96,9 @@ function requestUrl(input: RequestInfo | URL): string {
 }
 
 beforeEach(() => {
+  for (const name of ["GEMINI_API_KEY", "GOOGLE_API_KEY", "OPENCODE_ANTIGRAVITY_API_KEYS"]) {
+    vi.stubEnv(name, "")
+  }
   const loadFromDisk = AccountManager.loadFromDisk
   vi.spyOn(AccountManager, "loadFromDisk").mockImplementation(async (auth) => {
     const manager = await loadFromDisk(auth)
@@ -109,6 +112,7 @@ afterEach(async () => {
   for (const manager of accountManagers.splice(0)) await manager.flushSaveToDisk()
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
+  vi.unstubAllEnvs()
   while (testDirectories.length > 0) {
     const directory = testDirectories.pop()
     if (directory) rmSync(directory, { recursive: true, force: true })
@@ -122,6 +126,34 @@ afterEach(async () => {
 })
 
 describe("Antigravity transport through @ai-sdk/google", () => {
+  it("reports the failed refresh token to V2 instead of clearing the current host credential", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = requestUrl(input)
+      if (url.includes("antigravity-auto-updater")) return new Response("1.18.3")
+      if (url.includes("oauth2.googleapis.com/token")) {
+        return new Response(JSON.stringify({ error: "invalid_grant" }), { status: 400 })
+      }
+      throw new Error(`Unexpected request: ${url}`)
+    }))
+    const directory = createDirectory()
+    const client = createClient()
+    client.auth.revoke = vi.fn(async () => undefined)
+    const set = vi.spyOn(client.auth, "set")
+    const plugin = trackPlugin(await createAntigravityPlugin("google")({ client, directory, runtime: "v2" }))
+    const loaded = await plugin.auth.loader(async () => ({
+      type: "oauth",
+      refresh: "revoked-token|test-project|managed-project",
+      access: "expired-access",
+      expires: 1,
+    }), { id: "google" })
+    if (!isLoader(loaded)) throw new Error("OAuth did not produce a fetch loader")
+    const model = createGoogleGenerativeAI({ apiKey: "driver-placeholder", fetch: driverFetch(loaded) })("gemini-3-pro-preview")
+
+    await expect(model.doGenerate(generateOptions("high"))).rejects.toThrow()
+    expect(client.auth.revoke).toHaveBeenCalledWith("revoked-token")
+    expect(set).not.toHaveBeenCalled()
+  })
+
   it("rewrites an OAuth Gemini request, retains the variant thinking level, and parses the Google driver response", async () => {
     const requests: Array<{ url: string; init?: RequestInit }> = []
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {

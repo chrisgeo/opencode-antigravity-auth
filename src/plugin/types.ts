@@ -51,7 +51,9 @@ export interface LoaderResult {
 export type PluginClient = {
   app: Pick<PluginInput["client"]["app"], "log">;
   tui: Pick<PluginInput["client"]["tui"], "showToast">;
-  auth: Pick<PluginInput["client"]["auth"], "set">;
+  auth: Pick<PluginInput["client"]["auth"], "set"> & {
+    revoke?: (refreshToken: string) => Promise<void>;
+  };
   session: Pick<PluginInput["client"]["session"], "prompt" | "abort" | "messages">;
 };
 
